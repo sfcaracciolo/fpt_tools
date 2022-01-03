@@ -12,13 +12,13 @@ def out_of_window_mask(fpt, window, cols=None):
     """Return rows with some cols fiducials out of window range including nan values."""
     if cols is not None:
         fpt = fpt[:, cols]
-
+    
     cfpt = centered_fpt(fpt, window)
 
     full_mask = np.zeros_like(cfpt, dtype=np.bool8)
     np.logical_or(cfpt < 0, cfpt > window-1, out=full_mask)
     
-    mask = np.zeros_like(cfpt.shape[0], dtype=np.bool8)
+    mask = np.zeros(cfpt.shape[0], dtype=np.bool8)
     np.any(full_mask, axis=1, out=mask)
 
     return mask
@@ -35,14 +35,11 @@ def nan_value(fpt):
 
 def cc_mask(data, filter, cc_thr = .97):
 
-    if filter.ndim == 1:
-        filter = filter[:, np.newaxis]
-
     # make a beat template
     template = np.mean(
         data,
         axis=0,
-        where=np.logical_not(filter),
+        where=np.logical_not(filter)[:, np.newaxis],
     )
 
     # compute cc
@@ -52,7 +49,8 @@ def cc_mask(data, filter, cc_thr = .97):
     )[:-1,-1]
 
     # excluding rows with cc<0.97 
-    mask = cc < cc_thr
+    mask = cc >= cc_thr
+    
     # exclude filter from cc_mask
     mask[filter] = False
 
