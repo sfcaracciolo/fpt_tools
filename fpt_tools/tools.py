@@ -49,12 +49,12 @@ def cc_mask(data, filter, cc_thr = .97):
     )[:-1,-1]
 
     # excluding rows with cc<0.97 
-    mask = cc >= cc_thr
+    cc_filter = cc < cc_thr
     
     # exclude filter from cc_mask
-    mask[filter] = False
+    cc_filter[filter] = False
 
-    return mask
+    return np.logical_not(cc_filter)
     
 def measurements(data, fpt, filter):
     NAN = nan_value(fpt)
