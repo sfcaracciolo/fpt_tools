@@ -10,17 +10,19 @@ def centered_fpt(fpt, window):
 
 def out_of_window_mask(fpt, window, cols=None):
     """Return rows with some cols fiducials out of window range including nan values."""
-    if cols is not None:
-        fpt = fpt[:, cols]
-    
+
     cfpt = centered_fpt(fpt, window)
 
-    full_mask = np.zeros_like(cfpt, dtype=np.bool8)
-    np.logical_or(cfpt < 0, cfpt > window-1, out=full_mask)
-    
-    mask = np.zeros(cfpt.shape[0], dtype=np.bool8)
-    np.any(full_mask, axis=1, out=mask)
+    if cols is not None:
+        cfpt = cfpt[:, cols]
 
+    full_filter = np.zeros_like(cfpt, dtype=np.bool8)
+    np.logical_or(cfpt < 0, cfpt > window-1, out=full_filter)
+    
+    filter = np.zeros(cfpt.shape[0], dtype=np.bool8)
+    np.any(full_filter, axis=1, out=filter)
+
+    mask = np.logical_not(filter)
     return mask
 
 def nan_value(fpt):
@@ -56,6 +58,26 @@ def cc_mask(data, filter, cc_thr = .97):
 
     return np.logical_not(cc_filter)
     
+def excursion_mask(fpt, window, filter, cols=None, q_range = (0., 1.)):
+    
+    cfpt = centered_fpt(fpt, window)
+
+    if cols is not None:
+        cfpt = cfpt[:, cols]
+    
+    pre_mask = np.logical_not(filter)
+    fcfpt = cfpt[pre_mask,:]
+
+    q1 = np.quantile(fcfpt, q_range[0], axis=0)
+    q3 = np.quantile(fcfpt, q_range[1], axis=0)
+
+    ex_mask = np.ones(cfpt.shape[0], dtype=np.bool8)
+    for i in range(cfpt.shape[1]):
+        ex_mask[:] = ex_mask & (cfpt[:,i] >= q1[i]) & (cfpt[:,i] <= q3[i])
+
+    return ex_mask
+
+
 def measurements(data, fpt, filter):
     NAN = nan_value(fpt)
     m = np.empty((fpt.shape[0], 9), dtype=NAN.dtype)
