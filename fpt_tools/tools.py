@@ -2,7 +2,7 @@
 import numpy as np 
 
 def centered_fpt(fpt, window):
-    onsets = fpt[:,5]
+    onsets = fpt[:,5].copy()
     onsets -= window // 2
     NAN = nan_value(fpt)
     cfpt = np.where(fpt != NAN, fpt - onsets[:, np.newaxis], NAN)
