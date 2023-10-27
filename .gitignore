@@ -3,4 +3,8 @@
 /Lib
 /pyvenv.cfg
 /Scripts
+/lib64
+/lib
+*.egg-info
+/bin
 __pycache__
